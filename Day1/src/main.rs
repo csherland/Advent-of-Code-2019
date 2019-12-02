@@ -19,5 +19,5 @@ fn main() {
     required_fuel += ( mass / 3 ) - 2;
   }
 
-  println!("Required fule: {}", required_fuel);
+  println!("Required fuel: {}", required_fuel);
 }
