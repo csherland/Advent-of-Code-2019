@@ -9,7 +9,7 @@ use std::cmp::Ordering;
 #[derive(Debug, PartialEq)]
 struct Edge {
   direction: String,
-  length: u32,
+  length: i32,
   start: Point
 }
 
@@ -35,51 +35,44 @@ impl FromStr for Edge {
 
   fn from_str(s: &str) -> Result<Self, Self::Err> {
     let direction = String::from(s.get(..1).ok_or(EdgeParseError)?);
-    let length : u32 = s[1..].parse::<u32>().or(Err(EdgeParseError))?;
-    let start = Point { x: 0, y: 0 }; // TODO
+    let length : i32 = s[1..].parse::<i32>().or(Err(EdgeParseError))?;
+    let start = Point { x: 0, y: 0 }; // populated on second run through array
 
     Ok(Edge { direction, length, start })
   }
 }
 
 impl Edge {
-  fn getPoints(&self) -> Vec<Point> {
+  fn get_points(&self) -> Vec<Point> {
 
     let mut points: Vec<Point> = vec![];
 
     // todo: messy
     match self.direction.as_ref() {
-      "U" => for y in self.start.y-self.length..self.start.y { points.push(Point { x: self.start.x, y })},
-      "D" => for y in self.start.y..self.start.y+self.length { points.push(Point { x: self.start.x, y })},
-      "L" => for x in self.start.x-self.length..self.start.x { points.push(Point { x, y: self.start.y })},
-      "R" => for x in self.start.x..self.start.x+self.length { points.push(Point { x, y: self.start.y })},
+      "U" => for y in self.start.y-self.length..self.start.y-1 { points.push(Point { x: self.start.x, y })},
+      "D" => for y in self.start.y+1..self.start.y+self.length { points.push(Point { x: self.start.x, y })},
+      "L" => for x in self.start.x-self.length..self.start.x-1 { points.push(Point { x, y: self.start.y })},
+      "R" => for x in self.start.x+1..self.start.x+self.length { points.push(Point { x, y: self.start.y })},
       _ => panic!("Direction invalid!")
+    }
+
+    match self.direction.as_ref() {
+      "D" | "L" => points.reverse(),
+      _ => ()
     }
 
     points
   }
 
-  fn getEnd(&self) -> Option<Point> {
-    self.getPoints().last().cloned()
-  }
-
-  fn intersection(&self, edge: Edge) -> Option<Point>{
-    for point_x in self.getPoints() {
-      for point_y in edge.getPoints() {
-        if point_x == point_y {
-          Some(point_x);
-        }
-      }
-    }
-
-    None 
+  fn get_end(&self) -> Option<Point> {
+    self.get_points().last().cloned()
   }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Clone, Copy)]
 struct Point {
-  x: u32,
-  y: u32
+  x: i32,
+  y: i32
 }
 
 impl Ord for Point {
@@ -94,11 +87,26 @@ fn main() {
 
   let file = BufReader::new(&fp);
 
-  let wires : Vec<Vec<Edge>> = file.lines()
+  let points = file.lines()
                   .map(|l| l.expect("Wire invalid").split(",").map(|s| s.parse::<Edge>().unwrap()).collect())
-                  .collect(); // Vec<Vec<Edge>>
-                  // .fold() // Vec<Point>
-
+                  .fold(vec![], | mut acc, mut wire: Vec<Edge> | { // Set starts for vectors
+                    let mut start = Point { x: 0, y: 0 };
+                    for edge in &mut wire {
+                      (*edge).start = start;
+                      start = edge.get_end().unwrap();
+                      println!("{:?}", (*edge).start);
+                    } 
+                    acc.push(wire);
+                    acc
+                  })
+                  .iter()
+                  .fold(vec![], | mut acc: Vec<Point>, wire: &Vec<Edge> | {
+                    for edge in wire {
+                      acc.append(&mut edge.get_points())
+                    }
+                    acc
+                  });
+                  // .filter(|x| );
   
-  println!("{:?}", wires);
+  println!("{:?}", points.len());
 }
