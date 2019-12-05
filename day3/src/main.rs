@@ -49,10 +49,10 @@ impl Edge {
 
     // todo: messy
     match self.direction.as_ref() {
-      "U" => for y in self.start.y-self.length..self.start.y-1 { points.push(Point { x: self.start.x, y })},
-      "D" => for y in self.start.y+1..self.start.y+self.length { points.push(Point { x: self.start.x, y })},
-      "L" => for x in self.start.x-self.length..self.start.x-1 { points.push(Point { x, y: self.start.y })},
-      "R" => for x in self.start.x+1..self.start.x+self.length { points.push(Point { x, y: self.start.y })},
+      "U" => for y in self.start.y+1..self.start.y+self.length+1 { points.push(Point { x: self.start.x, y })},
+      "D" => for y in self.start.y-1-self.length..self.start.y-1 { points.push(Point { x: self.start.x, y })},
+      "L" => for x in self.start.x-1-self.length..self.start.x-1 { points.push(Point { x, y: self.start.y })},
+      "R" => for x in self.start.x+1..self.start.x+self.length+1 { points.push(Point { x, y: self.start.y })},
       _ => panic!("Direction invalid!")
     }
 
@@ -87,7 +87,7 @@ fn main() {
 
   let file = BufReader::new(&fp);
 
-  let points = file.lines()
+  let mut points = file.lines()
                   .map(|l| l.expect("Wire invalid").split(",").map(|s| s.parse::<Edge>().unwrap()).collect())
                   .fold(vec![], | mut acc, mut wire: Vec<Edge> | { // Set starts for vectors
                     let mut start = Point { x: 0, y: 0 };
@@ -106,7 +106,14 @@ fn main() {
                     }
                     acc
                   });
-                  // .filter(|x| );
-  
-  println!("{:?}", points.len());
+
+  points.sort();
+
+  for (i, point) in points.iter().enumerate() {
+    println!("{:?} {:?}", *point, points[i + 1 as usize]);
+    if *point == points[i + 1 as usize] {
+      println!("{:?}", (*point).x + (*point).y);
+      break;
+    }
+  }
 }
