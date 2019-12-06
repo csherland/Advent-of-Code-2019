@@ -4,19 +4,23 @@ fn main() {
         let mut i = val;
         let mut digits = vec![];
 
+        // Parse number into array of digits
         while i > 0 {
             let digit = i % 10;
             digits.push(digit);
             i /= 10;
         }
         digits.reverse();
-        let mut clone = digits.clone();
-        clone.sort();
 
-        let mut uniques = clone.clone();
+        // What digits should look like if ascending
+        let mut sorted = digits.clone();
+        sorted.sort();
+
+        // Use this to check that there are doubles
+        let mut uniques = digits.clone();
         uniques.dedup();
         
-        if clone == digits && uniques.len() < digits.len() {
+        if sorted == digits && uniques.len() < digits.len() {
             acc.push(val);
         }
         acc
