@@ -80,7 +80,7 @@ fn main() {
 
   let file = BufReader::new(&fp);
 
-  let mut points = file.lines()
+  let wires = file.lines()
                   .map(|l| l.expect("Wire invalid").split(",").map(|s| s.parse::<Edge>().unwrap()).collect())
                   .fold(vec![], | mut acc, mut wire: Vec<Edge> | { // Set starts for vectors
                     let mut start = Point { x: 0, y: 0 };
@@ -92,29 +92,27 @@ fn main() {
                     acc
                   })
                   .iter()
-                  .fold(vec![], | mut acc: Vec<Point>, wire: &Vec<Edge> | {
+                  .fold(vec![], | mut acc: Vec<Vec<Point>>, wire: &Vec<Edge> | {
+                    let mut w: Vec<Point> = vec![];
                     for edge in wire {
-                      acc.append(&mut edge.get_points())
+                      // println!("{:?}", edge.get_points());
+                      w.append(&mut edge.get_points())
                     }
+                    w.sort_by(|a, b| (i32::abs(a.x) + i32::abs(a.y)).cmp(&(i32::abs(b.x) + i32::abs(b.y))));
+                    acc.push(w);
                     acc
                   });
 
 
-  points.sort_by(|a, b| (i32::abs(a.x) + i32::abs(a.y)).cmp(&(i32::abs(b.x) + i32::abs(b.y))));
-
   let mut intersections = vec![];
-  for (i, point_a) in points.iter().enumerate() {
-    for j in i+1..points.len() {
-      let point_b = points[j];
-
-      if (*point_a).x == point_b.x && (*point_a).y == point_b.y {
-        intersections.push(*point_a);
-        break;
+  for point_a in &wires[0 as usize] {
+    for point_b in &wires[1 as usize] {
+      if point_a.x == point_b.x && point_a.y == point_b.y {
+        println!("{:?}", point_a);
+        intersections.push(point_a);
       }
     }
   }
-
-  intersections.sort_by(|a, b| (i32::abs(a.x) + i32::abs(a.y)).cmp(&(i32::abs(b.x) + i32::abs(b.y))));
 
   println!("{:?}", intersections);
 }
