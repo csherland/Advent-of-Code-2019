@@ -12,11 +12,20 @@ fn main() {
                   .map(|l| l.expect("Could not read line").parse().unwrap())
                   .collect();
 
-
   let mut required_fuel = 0; 
+  for mass in inputs.clone() {
+    let mut fuel = ( mass / 3 ) - 2;
+    required_fuel += fuel;
 
-  for mass in inputs {
-    required_fuel += ( mass / 3 ) - 2;
+    // Mass of fuel we just added also requires fuel!
+    while fuel > 0 {
+      let extra_fuel = (fuel / 3) - 2;
+      if extra_fuel > 0 {
+        required_fuel += extra_fuel;
+      }
+      fuel = extra_fuel;
+    }
+
   }
 
   println!("Required fuel: {}", required_fuel);
