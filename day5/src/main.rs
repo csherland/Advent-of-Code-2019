@@ -25,7 +25,7 @@ fn parse_instruction(mut instruction: i64) -> Instruction {
     match op_code {
         1 | 2 => step = 4,
         3 | 4 => step = 2,
-        99 => panic!("Program ends -- op code 99"), // Program ends, no step
+        99 => step = 1, // Program ends, no step
         _ => panic!("Unknown command")
     }
 
@@ -45,6 +45,10 @@ fn run_intcode_program(mut program: Vec<i64>, input: i64) {
         // Identify parameter modes and op code
         let instruction = parse_instruction(program[i]);
 
+        if instruction.op_code == 99 {
+            break;
+        }
+
         let mut parameters = vec![];
         for (j, mode) in instruction.modes.iter().enumerate() {
             if *mode == 0 {
@@ -63,7 +67,10 @@ fn run_intcode_program(mut program: Vec<i64>, input: i64) {
             2 => program[pos as usize] = parameters[0] * parameters[1],
             3 => program[pos as usize] = input,
             4 => println!("{}", program[pos as usize]), // Output command
-            99 => break,
+            5 => (),
+            6 => (),
+            7 => (),
+            8 => (),
             _ => panic!("Unknown command")
         }
 
