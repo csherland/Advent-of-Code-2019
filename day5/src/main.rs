@@ -2,12 +2,12 @@ use std::fs;
 
 #[derive(Debug)]
 struct Instruction {
-    op_code: i32,
+    op_code: i64,
     step: usize,
-    modes: Vec<i32>
+    modes: Vec<i64>
 }
 
-fn parse_instruction(mut instruction: i32) -> Instruction {
+fn parse_instruction(mut instruction: i64) -> Instruction {
     let mut parameters = vec![];
     while instruction > 0 {
         parameters.push(instruction % 10);
@@ -25,11 +25,11 @@ fn parse_instruction(mut instruction: i32) -> Instruction {
     match op_code {
         1 | 2 => step = 4,
         3 | 4 => step = 2,
-        99 => (), // Program ends, no step
+        99 => panic!("Program ends -- op code 99"), // Program ends, no step
         _ => panic!("Unknown command")
     }
 
-    let mut modes: Vec<i32> = vec![0; step - 1];
+    let mut modes: Vec<i64> = vec![0; step - 1];
     if parameters.len() > 2 {
         for (i, mode) in parameters[2..].iter().enumerate() {
             modes[i] = *mode;
@@ -39,7 +39,7 @@ fn parse_instruction(mut instruction: i32) -> Instruction {
     Instruction { op_code, step, modes }
 }
 
-fn run_intcode_program(mut program: Vec<i32>, input: i32) {
+fn run_intcode_program(mut program: Vec<i64>, input: i64) {
     let mut i = 0;
     while i < program.len() {
         // Identify parameter modes and op code
@@ -53,13 +53,16 @@ fn run_intcode_program(mut program: Vec<i32>, input: i32) {
                 parameters.push(program[i + j + 1 as usize]);
             }
         }
+
+        println!("{:?}", instruction);
+        println!("{:?}", parameters);
         
         let pos = program[i + instruction.step - 1];
         match instruction.op_code {
             1 => program[pos as usize] = parameters[0] + parameters[1],
             2 => program[pos as usize] = parameters[0] * parameters[1],
             3 => program[pos as usize] = input,
-            4 => println!("{}", program[parameters[0] as usize]), // Output command
+            4 => println!("{}", program[pos as usize]), // Output command
             99 => break,
             _ => panic!("Unknown command")
         }
@@ -69,7 +72,7 @@ fn run_intcode_program(mut program: Vec<i32>, input: i32) {
 }
 
 fn main() {
-    let program:Vec<i32> = fs::read_to_string("input.txt")
+    let program:Vec<i64> = fs::read_to_string("input.txt")
                                 .unwrap()
                                 .split(",")
                                 .map(|l| l.parse().unwrap())
