@@ -21,11 +21,12 @@ fn parse_instruction(mut instruction: i64) -> Instruction {
         op_code = parameters[0];
     }
 
-    let mut step: usize = 0;
+    let step: usize;
     match op_code {
-        1 | 2 => step = 4,
+        1 | 2 | 7 | 8  => step = 4,
         3 | 4 => step = 2,
-        99 => step = 1, // Program ends, no step
+        5 | 6 => step = 3,
+        99 => step = 2, // Program ends, no step
         _ => panic!("Unknown command")
     }
 
@@ -39,7 +40,8 @@ fn parse_instruction(mut instruction: i64) -> Instruction {
     Instruction { op_code, step, modes }
 }
 
-fn run_intcode_program(mut program: Vec<i64>, input: i64) {
+fn run_intcode_program(mut program: Vec<i64>, input: i64) -> i64{
+    let mut output: i64 = 0;
     let mut i = 0;
     while i < program.len() {
         // Identify parameter modes and op code
@@ -50,6 +52,7 @@ fn run_intcode_program(mut program: Vec<i64>, input: i64) {
         }
 
         let mut parameters = vec![];
+
         for (j, mode) in instruction.modes.iter().enumerate() {
             if *mode == 0 {
                 parameters.push(program[program[i + j + 1 as usize] as usize]);
@@ -57,33 +60,40 @@ fn run_intcode_program(mut program: Vec<i64>, input: i64) {
                 parameters.push(program[i + j + 1 as usize]);
             }
         }
-
-        println!("{:?}", instruction);
-        println!("{:?}", parameters);
         
-        let pos = program[i + instruction.step - 1];
+        let pos = program[i + instruction.step - 1] as usize;
         match instruction.op_code {
-            1 => program[pos as usize] = parameters[0] + parameters[1],
-            2 => program[pos as usize] = parameters[0] * parameters[1],
-            3 => program[pos as usize] = input,
-            4 => println!("{}", program[pos as usize]), // Output command
-            5 => (),
-            6 => (),
-            7 => (),
-            8 => (),
+            1 => program[pos] = parameters[0] + parameters[1],
+            2 => program[pos] = parameters[0] * parameters[1],
+            3 => program[pos] = input,
+            4 => output = parameters[0],
+            5 => if parameters[0] != 0 { i = parameters[1] as usize; continue; },
+            6 => if parameters[0] == 0 { i = parameters[1] as usize; continue; },
+            7 => if parameters[0] < parameters[1] { program[pos] = 1; } else { program[pos] = 0; },
+            8 => if parameters[0] == parameters[1] { program[pos] = 1; } else { program[pos] = 0; },
             _ => panic!("Unknown command")
         }
 
         i += instruction.step;
     }
+    
+    output
 }
 
 fn main() {
-    let program:Vec<i64> = fs::read_to_string("input.txt")
+    let program1:Vec<i64> = fs::read_to_string("input_1.txt")
                                 .unwrap()
                                 .split(",")
                                 .map(|l| l.parse().unwrap())
                                 .collect();
 
-    run_intcode_program(program, 1);
+    println!("Result 1: {}", run_intcode_program(program1, 1));
+
+    let program2:Vec<i64> = fs::read_to_string("input_2.txt")
+                                .unwrap()
+                                .split(",")
+                                .map(|l| l.parse().unwrap())
+                                .collect();
+
+    println!("Result 2: {}", run_intcode_program(program2, 5));
 }
